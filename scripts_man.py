@@ -4,6 +4,8 @@ import datetime
 import shutil
 import sys
 import time
+from rich.status import Status
+
 
 # [author]:         Donald Guiles
 # [script]:         scripts_man.py
@@ -33,8 +35,8 @@ class Directory:
     desktop = f"{home}/Desktop"
     downloads = f'{home}/Downloads'
     clang = f"{scripts}/clang"
-    headers = f"{clang}/headers"
-    o = f"{clang}/o"
+    headers = f"/home/{os.getlogin()}/Scripts/clang/headers"
+    o = f"home/{os.getlogin()}/Scripts/clang/object_file"
 
 
 
@@ -58,6 +60,8 @@ script_directories = {
 }
 
 extensions = [f".{x}" for x in script_directories.keys()]
+dont_search = [Directory.scripts, Directory.clang, Directory.go, Directory.python, Directory.headers, Directory.o, Directory.html]
+
 
 ##############################
 # Functions
@@ -105,13 +109,12 @@ def copy_file_to_script_home(filepath: str):
             shutil.copy(src=filepath, dst=destination)
         except PermissionError:
             message('error', f'Permission Not Granted  -> {filename}')
+        except shutil.RegistryError:
+                message('error', f'Permission Not Granted  -> {filename}')
         except shutil.SameFileError:
             message('error', f'Same File Exists -> {filename}')
         except FileNotFoundError:
             message('not found', filepath)
-
-    else:
-        message('Error', 'File already exists with that name')
 
 def message(title, message):
     """ print a colored update message 
@@ -122,13 +125,15 @@ def message(title, message):
 def make_directories():
     """ check and make the neccessary directories 
     """
-    
+    os.sync()
     for directory in directories:
         try:
             os.mkdir(directory)
             message('created', directory)
         except FileExistsError:
             continue
+        except FileNotFoundError:
+            os.mkdir(directory)
 
 def get_files(directory: str):
     """ get fullpaths for the given directory 
@@ -205,9 +210,14 @@ def file_search(directory: str):
 
     message("collecting", 'all files')
     for root, dirs, files in os.walk(directory):
+        message('scanning', root)
+        if root in dont_search:
+            message('Found', root)
+            continue
         for file in files:
             if check_extensions(file):
                 filepath = f'{root}/{file}'
+                message('checking', filepath)
                 copy_file_to_script_home(filepath)
 
 def search_user():
@@ -225,12 +235,13 @@ def search_from_root():
 def main_root():
     """ main function but instead searches all the directories 
     """
-
-    t1 = print_timer()
-    precheck()
-    search_from_root()
-    t2 = print_timer()
-    delta_time(t1, t2)
+    with Status("Scanning from root...", spinner='aesthetic') as status:
+        t1 = print_timer()
+        make_directories()
+        check_os()
+        search_from_root()
+        t2 = print_timer()
+        delta_time(t1, t2)
 
 
 def main():
