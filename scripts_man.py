@@ -36,7 +36,7 @@ class Directory:
     downloads = f'{home}/Downloads'
     clang = f"{scripts}/clang"
     headers = f"/home/{os.getlogin()}/Scripts/clang/headers"
-    o = f"home/{os.getlogin()}/Scripts/clang/object_file"
+    o = f"home/{os.getlogin()}/Scripts/clang/o"
 
 
 
@@ -48,7 +48,7 @@ directories = [
     Directory.scripts, Directory.python, Directory.go, 
     Directory.cpp, Directory.sh, Directory.js, 
     Directory.html, Directory.desktop, Directory.downloads, 
-    Directory.clang,Directory.headers, Directory.o
+    Directory.clang, Directory.headers, Directory.o
     ]
 
 script_directories = {
@@ -60,12 +60,20 @@ script_directories = {
 }
 
 extensions = [f".{x}" for x in script_directories.keys()]
-dont_search = [Directory.scripts, Directory.clang, Directory.go, Directory.python, Directory.headers, Directory.o, Directory.html]
-
+dont_search = [Directory.scripts, Directory.js, Directory.clang, Directory.go, Directory.python, Directory.headers, Directory.o, Directory.html]
+subdirs = []
 
 ##############################
 # Functions
 ##############################
+
+def delete_all():
+    os.sync()
+    for directory in script_directories.values()[1:-2]:
+        message('deleting', directory)
+        shutil.rmtree(directory)
+        os.sync()
+
 
 def check_os():
     """ Check the operating system and declare if usable 
@@ -133,7 +141,7 @@ def make_directories():
         except FileExistsError:
             continue
         except FileNotFoundError:
-            os.mkdir(directory)
+            continue
 
 def get_files(directory: str):
     """ get fullpaths for the given directory 
