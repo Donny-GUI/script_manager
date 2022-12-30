@@ -276,7 +276,29 @@ def precheck():
     check_os()
     make_directories()
 
+def get_python_files_by_name():
+    """ get the names of the python files """
+    files = [x.replace("-", ' ').replace("_", " ")[:-3] for x in os.listdir(Directory.python)]
+    return files
+
+def get_python_files():
+    """ get all the python files  """
+    return os.listdir(Directory.python)
+
+def get_python_file_dictionary():
+    """ get all the python files as a dictionary {name : file} """
+
+    names = get_python_files_by_name()
+    files = get_python_files()
+    pythonfiles = {}
+    for index, name in enumerate(names):
+        pythonfiles[name] = files[index]
+    return pythonfiles
 
 
 if __name__ == '__main__':
-    main_root()
+    #main_root()
+    from pprint import pprint
+    pprint(get_python_file_dictionary())
+
+    
